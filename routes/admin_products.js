@@ -265,14 +265,46 @@ router.post('/edit-product/:id', function (req, res) {
 
 });
 
-//get Delete page ///////////////
+//Pst product gallery ///////////////
 
-router.get('/delete-page/:id', function(req, res){
-    Page.findByIdAndRemove(req.params.id, function(err){
-        if (err) return console.log(err);
-        req.flash('success', 'Page deleted');
-        res.redirect('/admin/pages/');
+router.get('/product-gallery/:id', function(req, res){
+    var productImage = req.files.file;
+    var id = req.params.id;
+    var path = 'public/product_images/' + id + '/gallery' + req.files.file.name;
+    var thumsPath = 'public/product_images/' + id + '/gallery' + req.files.file.name;
+
+    productImage.mv(path, function(err){
+        if(err) console.log(err);
+
+        resizeImg(fs.readFileSync(path), {width: 100, height: 100}).then(function(buf){
+            fs.writeFileSync(thumsPath, buf);
+        });
     });
+    res.sendStatus(200);
 });
+
+/*
+ * GET delete product
+ */
+router.get('/delete-product/:id', function (req, res) {
+
+    var id = req.params.id;
+    var path = 'public/product_images/' + id;
+
+    fs.remove(path, function (err) {
+        if (err) {
+            console.log(err);
+        } else {
+            Product.findByIdAndRemove(id, function (err) {
+                console.log(err);
+            });
+
+            req.flash('success', 'Product deleted!');
+            res.redirect('/admin/products');
+        }
+    });
+
+});
+
 //Exports
 module.exports = router;
